@@ -1,0 +1,40 @@
+{
+  "name": "SquareCircuit",
+  "version": "0.0.9",
+  "description": "Square Circuit",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "author": "Kuka",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.kuka.squarecircuit",
+    "productName": "Square Circuit",
+    "files": [
+      "main.js",
+      "sc.html",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+  "asar": false,
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Square Circuit"
+  }
+ }
+}

@@ -19,7 +19,7 @@ This is a racing game where square-shaped "vehicles" compete around a track. The
 ### Electron
 - Build a full-screen desktop app using Electron. All necessary files and parameters, including an app icon, are provided.
 
-### Pre-built installation file made with Electron and nsis
+### Pre-built installation file made with Electron and nsis (Windows x64)
 - You can download the pre-built installation file from the Releases tab.
 
 ### Web browser

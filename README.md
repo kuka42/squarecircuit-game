@@ -9,6 +9,12 @@ This is a racing game where square-shaped vehicles compete around a track. The g
 - CSS
 - JavaScript
 
+## File structure
+- sc.html: the main HTML file containing the game's core code.
+- package.json: manages project dependencies, scripts, and metadata.
+- main.js: serving as the application's entry point.
+- icon.ico: the icon file used for the game.
+
 ## How To Run
 ### Electron
 - Build a full-screen desktop app using Electron. All necessary files and parameters, including an app icon, are provided.

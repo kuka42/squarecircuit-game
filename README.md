@@ -2,7 +2,7 @@
 A simple racing game for 1-4 players, written in JavaScript and designed for export using Electron.
 
 ## Overview
-This is a racing game where square-shaped vehicles compete around a track. The game incorporates collision detection between players and the track boundaries. Each of the four players is equipped with a lap counter and has their own set of key bindings to control their square.
+This is a racing game where square-shaped "vehicles" compete around a track. The game incorporates collision detection between players and the track boundaries. Each of the four players is equipped with a lap counter and has their own set of key bindings to control their square.
 
 ### Built with
 - HTML

@@ -11,12 +11,13 @@ This is a racing game where square-shaped vehicles compete around a track. The g
 
 ## How To Run
 ### Electron
-Best way is to build a full-screen desktop app using Electron. All necessary files and parameters, including an app icon, are provided.
+- Build a full-screen desktop app using Electron. All necessary files and parameters, including an app icon, are provided.
 
-Alternatively, download the pre-built installation file from the Releases tab.
+### Pre-built installation file made with Electron and nsis
+- You can download the pre-built installation file from the Releases tab.
 
 ### Web browser
-Open sc.html directly in your web browser.
+- Open sc.html directly in your web browser.
 
 ## How To Play
     Player 1: Up arrow, Down, Left, Right

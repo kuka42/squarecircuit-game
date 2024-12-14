@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>square circuit</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000000;
+    }
+    canvas {
+      background-color: #000000;
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let circleCenter = { x: 0, y: 0 };
+    const innerRadius = 150;
+    const outerRadius = 350;
+    const startLineAngle = Math.PI / 2;
+    const playerSize = 20;
+    const playerGap = 25;
+
+    const players = [
+      { x: 0, y: 0, color: "red", keys: { up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight", reverse: "ArrowDown" }, angle: 0, speed: 0, velocity: { x: 0, y: 0 }, trail: [], active: false, laps: -1, lastX: 0, lastY: 0 },
+      { x: 0, y: 0, color: "blue", keys: { up: "w", down: "s", left: "a", right: "d", reverse: "s" }, angle: 0, speed: 0, velocity: { x: 0, y: 0 }, trail: [], active: false, laps: -1, lastX: 0, lastY: 0 },
+      { x: 0, y: 0, color: "green", keys: { up: "8", down: "5", left: "4", right: "6", reverse: "5" }, angle: 0, speed: 0, velocity: { x: 0, y: 0 }, trail: [], active: false, laps: -1, lastX: 0, lastY: 0 },
+      { x: 0, y: 0, color: "yellow", keys: { up: "u", down: "j", left: "h", right: "k", reverse: "j" }, angle: 0, speed: 0, velocity: { x: 0, y: 0 }, trail: [], active: false, laps: -1, lastX: 0, lastY: 0 }
+    ];
+
+    function drawTrack() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw track
+      ctx.beginPath();
+      ctx.arc(circleCenter.x, circleCenter.y, outerRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(circleCenter.x, circleCenter.y, innerRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Draw start line
+      const startX = circleCenter.x + innerRadius * Math.cos(startLineAngle);
+      const startY = circleCenter.y - innerRadius * Math.sin(startLineAngle);
+      const endX = circleCenter.x + outerRadius * Math.cos(startLineAngle);
+      const endY = circleCenter.y - outerRadius * Math.sin(startLineAngle);
+
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.strokeStyle = "orange";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    function drawTrails() {
+      players.forEach(player => {
+        ctx.save();
+        ctx.fillStyle = player.color;
+        ctx.globalAlpha = 0.1;
+        player.trail.forEach(trail => {
+          ctx.fillRect(trail.x - playerSize / 2, trail.y - playerSize / 2, playerSize, playerSize);
+        });
+        ctx.restore();
+      });
+    }
+
+    function drawPlayers() {
+      players.forEach(player => {
+        if (player.active) {
+          ctx.save();
+          ctx.translate(player.x, player.y);
+          ctx.rotate(player.angle);
+          ctx.fillStyle = player.color;
+          ctx.fillRect(-10, -10, playerSize, playerSize);
+          ctx.restore();
+          // Display lap count
+          ctx.fillStyle = "#fff";
+          ctx.font = "14px Tahoma";
+          ctx.fillText(player.laps, player.x - playerSize / 2, player.y - playerSize / 2 - 10);
+        }
+      });
+    }
+
+    function updatePlayers() {
+      players.forEach((player, index) => {
+        if (!player.active) return;
+
+        if (player.leftPressed) player.angle -= 0.05;
+        if (player.rightPressed) player.angle += 0.05;
+
+        const acceleration = 0.15;
+        const maxSpeed = 10;
+        const deceleration = 0.98;
+        const reverseSpeed = 0.5;
+
+        if (player.upPressed) {
+          player.speed = Math.min(player.speed + acceleration, maxSpeed);
+        }
+        if (player.downPressed) {
+          player.speed *= deceleration;
+        }
+
+        if (player.reversePressed) {
+          player.speed = Math.max(player.speed - reverseSpeed, -3);
+        }
+
+        const targetVelocityX = Math.cos(player.angle) * player.speed;
+        const targetVelocityY = Math.sin(player.angle) * player.speed;
+
+        player.velocity.x += (targetVelocityX - player.velocity.x) * 0.2;
+        player.velocity.y += (targetVelocityY - player.velocity.y) * 0.2;
+
+        const newX = player.x + player.velocity.x;
+        const newY = player.y + player.velocity.y;
+
+        const distFromCenter = Math.hypot(newX - circleCenter.x, newY - circleCenter.y);
+        if (distFromCenter > innerRadius && distFromCenter < outerRadius) {
+          player.x = newX;
+          player.y = newY;
+        } else {
+          player.speed *= -0.5;
+          player.velocity.x *= -0.5;
+          player.velocity.y *= -0.5;
+        }
+
+        // Lap counting logic adjusted for upper half of the track
+        const startLineX = circleCenter.x + outerRadius * Math.cos(startLineAngle);
+        const startLineY = circleCenter.y - outerRadius * Math.sin(startLineAngle);
+
+        // Only count lap changes when player is in the upper half of the track (y < circleCenter.y)
+        if (player.y < circleCenter.y) {
+          const crossedStartLineLeftToRight = (player.lastX <= startLineX && player.x > startLineX);
+          const crossedStartLineRightToLeft = (player.lastX >= startLineX && player.x < startLineX);
+
+          if (crossedStartLineLeftToRight) {
+            player.laps += 1;
+          } else if (crossedStartLineRightToLeft) {
+            player.laps -= 1;
+          }
+        }
+
+        player.lastX = player.x;
+        player.lastY = player.y;
+
+        players.forEach((otherPlayer, otherIndex) => {
+          if (index !== otherIndex) {
+            const distance = Math.hypot(player.x - otherPlayer.x, player.y - otherPlayer.y);
+            if (distance < playerSize) {
+              const angle = Math.atan2(player.y - otherPlayer.y, player.x - otherPlayer.x);
+              const normalX = Math.cos(angle);
+              const normalY = Math.sin(angle);
+              const playerDotProduct = player.velocity.x * normalX + player.velocity.y * normalY;
+              const otherPlayerDotProduct = otherPlayer.velocity.x * normalX + otherPlayer.velocity.y * normalY;
+              const bounceFactor = 0.1;
+              player.velocity.x -= playerDotProduct * normalX * bounceFactor;
+              player.velocity.y -= playerDotProduct * normalY * bounceFactor;
+              otherPlayer.velocity.x += otherPlayerDotProduct * normalX * bounceFactor;
+              otherPlayer.velocity.y += otherPlayerDotProduct * normalY * bounceFactor;
+              player.speed *= 0.85;
+              otherPlayer.speed *= 0.85;
+              const overlap = playerSize - distance;
+              if (overlap > 0) {
+                const shiftX = normalX * overlap * 0.5;
+                const shiftY = normalY * overlap * 0.5;
+                player.x += shiftX;
+                player.y += shiftY;
+                otherPlayer.x -= shiftX;
+                otherPlayer.y -= shiftY;
+              }
+            }
+          }
+        });
+
+        player.speed *= 0.98;
+
+        player.trail.push({ x: player.x, y: player.y });
+        if (player.trail.length > 10) player.trail.shift();
+      });
+    }
+
+    function handleKeyDown(e) {
+      players.forEach(player => {
+        if (e.key === player.keys.up) player.upPressed = true;
+        if (e.key === player.keys.down) player.downPressed = true;
+        if (e.key === player.keys.left) player.leftPressed = true;
+        if (e.key === player.keys.right) player.rightPressed = true;
+        if (e.key === player.keys.reverse) player.reversePressed = true;
+
+        if ((player.keys.up === e.key || player.keys.down === e.key || player.keys.left === e.key || player.keys.right === e.key) && !player.active) {
+          player.active = true;
+          const startRadius = (innerRadius + outerRadius) / 2 + 35;
+          player.x = circleCenter.x + startRadius * Math.cos(startLineAngle);
+          player.y = circleCenter.y - startRadius * Math.sin(startLineAngle) + playerGap * players.indexOf(player);
+        }
+      });
+    }
+
+    function handleKeyUp(e) {
+      players.forEach(player => {
+        if (e.key === player.keys.up) player.upPressed = false;
+        if (e.key === player.keys.down) player.downPressed = false;
+        if (e.key === player.keys.left) player.leftPressed = false;
+        if (e.key === player.keys.right) player.rightPressed = false;
+        if (e.key === player.keys.reverse) player.reversePressed = false;
+      });
+    }
+
+    function gameLoop() {
+      drawTrack();
+      drawTrails();
+      drawPlayers();
+      updatePlayers();
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      circleCenter = { x: canvas.width / 2, y: canvas.height / 2 };
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    gameLoop();
+  </script>
+</body>
+</html>
